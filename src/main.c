@@ -1,7 +1,20 @@
 #include <stdio.h>
-#include "include/raylib.h"
+#include "../include/raylib.h"
 
 int main() {
-    printf("Hello World! \n");
-	return 0;
+    const int window_width = 1080;
+    const int window_height = 720;
+
+    InitWindow(window_width, window_height, "Game");
+    SetTargetFPS(60);
+
+    // Main game loop.
+    while (!WindowShouldClose()) {
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
+        EndDrawing();
+    }
+
+    CloseWindow();
+    return 0;
 }
