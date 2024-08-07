@@ -1,2 +1,6 @@
+game
+.game
+/game
 ./game
 .DS_Store
+.Makefile.swp
