@@ -5,6 +5,7 @@ dev:
 	echo "Compiling game..."
 	clang ${CFLAGS} src/main.c -o game
 	./game
+	rm -rf game
 
 clean:
 	rm -rf game

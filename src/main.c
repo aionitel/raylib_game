@@ -2,33 +2,47 @@
 #include <assert.h>
 #include "../include/raylib.h"
 
-#define MAXHEIGHT 20;
+void draw_texture() {
+	const int scale = 300;
+
+	// Load image, edit it, then turn it into a texture to be rendered.
+	Image image = LoadImage("resources/walk.png");
+	assert(IsImageReady(image));
+	ImageResize(&image,scale * 4, scale);
+	Texture2D texture = LoadTextureFromImage(image);
+	DrawTexture(texture, 50, 50, WHITE);
+}
 
 int main() {
-	const int window_width = 1080;
-    const int window_height = 720;
+	const int screen_width = 1080;
+    const int screen_height = 720;
+	float scale = 2.;
 
-    InitWindow(window_width, window_height, "Game");
+	// Character cutout is 32x32.
+	Rectangle cutout = { 0.0f, 0.0f, 256.0f, 256.0f };
+	Rectangle dest = { screen_width / 2.0f, screen_height / 2.0f, 32.0f, 32.0f };
+	Vector2 position = { screen_width / 2, screen_height / 2 };
+
+	// Init window,OpenGL context.
+	InitWindow(screen_width, screen_height, "Game");
     SetTargetFPS(60);
+	assert(IsWindowReady());
 
     // Load texture.
     Texture2D texture = LoadTexture("resources/walk.png");
+	SetTextureFilter(texture, TEXTURE_FILTER_TRILINEAR); // Makes texture smoother when upscaling.
 
     // Main game loop.
     while (!WindowShouldClose()) {
         BeginDrawing();
-        ClearBackground(RAYWHITE);
-		DrawFPS(10, 10);
-
-        // Draw texture to screen at position.
-        DrawTexture(texture, window_width / 2 - texture.width / 2, window_height / 2 - texture.height / 2, WHITE);
-
+			DrawFPS(10, 10);
+			draw_texture();
+			ClearBackground(WHITE);
         EndDrawing();
     }
 
     UnloadTexture(texture);
     CloseWindow();
-	assert(2);
 
     return 0;
 }
