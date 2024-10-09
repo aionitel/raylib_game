@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <assert.h>
-#include "../include/raylib.h"
+#include <raylib.h>
 
 int main() {
 	const int HEIGHT = 720;
