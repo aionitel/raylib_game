@@ -2,47 +2,40 @@
 #include <assert.h>
 #include "../include/raylib.h"
 
-void draw_texture() {
-	const int scale = 300;
-
-	// Load image, edit it, then turn it into a texture to be rendered.
-	Image image = LoadImage("resources/walk.png");
-	assert(IsImageReady(image));
-	ImageResize(&image,scale * 4, scale);
-	Texture2D texture = LoadTextureFromImage(image);
-	DrawTexture(texture, 50, 50, WHITE);
-}
-
 int main() {
-	const int screen_width = 1080;
-    const int screen_height = 720;
-	float scale = 2.;
+	const int HEIGHT = 720;
+	const int WIDTH = 1280;
+	InitWindow(WIDTH, HEIGHT, "Litter?");
 
-	// Character cutout is 32x32.
-	Rectangle cutout = { 0.0f, 0.0f, 256.0f, 256.0f };
-	Rectangle dest = { screen_width / 2.0f, screen_height / 2.0f, 32.0f, 32.0f };
-	Vector2 position = { screen_width / 2, screen_height / 2 };
+	// Define the camera to look into our 3d world
+    Camera camera = { 0 };
+    camera.position = (Vector3){ 10.0f, 10.0f, 10.0f }; // Camera position
+    camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
+    camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
+    camera.fovy = 45.0f;                                // Camera field-of-view Y
+    camera.projection = CAMERA_PERSPECTIVE;             // Camera mode type
 
-	// Init window,OpenGL context.
-	InitWindow(screen_width, screen_height, "Game");
-    SetTargetFPS(60);
-	assert(IsWindowReady());
-
-    // Load texture.
-    Texture2D texture = LoadTexture("resources/walk.png");
-	SetTextureFilter(texture, TEXTURE_FILTER_TRILINEAR); // Makes texture smoother when upscaling.
+	// Load texture and model.
+	Texture2D texture = LoadTexture("resources/idle_south.png");
+	Model model = LoadModel("resources/cola_can.glb");
+	Vector3 position = {0.0f, 0.0f, 0.0f};
 
     // Main game loop.
     while (!WindowShouldClose()) {
+		camera.position.y++;
         BeginDrawing();
-			DrawFPS(10, 10);
-			draw_texture();
 			ClearBackground(WHITE);
+			SetTargetFPS(75);
+			DrawFPS(10, 10);
+
+			DrawTexture(texture, 100, 100, WHITE);
+
+			BeginMode3D(camera);
+				DrawModel(model, position, 50.0f, WHITE);
+			EndMode3D();
         EndDrawing();
     }
 
-    UnloadTexture(texture);
     CloseWindow();
-
     return 0;
 }
