@@ -5,37 +5,48 @@
 int main() {
 	const int HEIGHT = 720;
 	const int WIDTH = 1280;
-	InitWindow(WIDTH, HEIGHT, "Litter?");
+	InitWindow(WIDTH, HEIGHT, "Litterc");
 
 	// Define the camera to look into our 3d world
     Camera camera = { 0 };
-    camera.position = (Vector3){ 10.0f, 10.0f, 10.0f }; // Camera position
+    camera.position = (Vector3){ 10.0f, 100.0f, 100.0f }; // Camera position
     camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
     camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
     camera.fovy = 45.0f;                                // Camera field-of-view Y
     camera.projection = CAMERA_PERSPECTIVE;             // Camera mode type
 
 	// Load texture and model.
-	Texture2D texture = LoadTexture("resources/idle_south.png");
-	Model model = LoadModel("resources/cola_can.glb");
+	int mat_count = 2;
+	Model billy = LoadModel("resources/billy.glb");
+	Texture2D texture = LoadTexture("resources/Billy_baseColor.png");
+
+	for (int i = 0; i < 10; i++) { printf("%d\n", billy.materials[i]); }
+	printf("CHANGING MATERIALS\n");
+	billy.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
+	for (int i = 0; i < 10; i++) { printf("%d\n", billy.materials[i]); }
+
+	assert(IsModelReady(billy));
+
+	Vector2 texture_pos = {0.0f, 0.0f};
 	Vector3 position = {0.0f, 0.0f, 0.0f};
+	Vector3 scale = {100.0f, 100.0f, 10.0f};
 
     // Main game loop.
     while (!WindowShouldClose()) {
-		camera.position.y++;
         BeginDrawing();
-			ClearBackground(WHITE);
+			ClearBackground(BLACK);
 			SetTargetFPS(75);
 			DrawFPS(10, 10);
 
-			DrawTexture(texture, 100, 100, WHITE);
-
 			BeginMode3D(camera);
-				DrawModel(model, position, 50.0f, WHITE);
+				DrawGrid(10, 1.0f);
+				DrawModelEx(billy, position, (Vector3){0.0f, 0.0f, 0.0f}, 0.0f, scale, WHITE);
 			EndMode3D();
+
         EndDrawing();
     }
 
+    UnloadModel(billy);
     CloseWindow();
     return 0;
 }

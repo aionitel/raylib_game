@@ -1,0 +1,11 @@
+Model Information:
+* title:	IMPACT — Billy — Low poly character (baked)
+* source:	https://sketchfab.com/3d-models/impact-billy-low-poly-character-baked-2ffdab11f21a4a08ace943569476a8b0
+* author:	Amb (https://sketchfab.com/ambroize)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "IMPACT — Billy — Low poly character (baked)" (https://sketchfab.com/3d-models/impact-billy-low-poly-character-baked-2ffdab11f21a4a08ace943569476a8b0) by Amb (https://sketchfab.com/ambroize) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
