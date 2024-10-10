@@ -20,10 +20,10 @@ int main() {
 	Model billy = LoadModel("resources/billy.glb");
 	Texture2D texture = LoadTexture("resources/Billy_baseColor.png");
 
-	for (int i = 0; i < 10; i++) { printf("%d\n", billy.materials[i]); }
-	printf("CHANGING MATERIALS\n");
-	billy.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
-	for (int i = 0; i < 10; i++) { printf("%d\n", billy.materials[i]); }
+	// for (int i = 0; i < 10; i++) { printf("%d\n", billy.materials[i]); }
+	// printf("CHANGING MATERIALS\n");
+	// billy.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
+	// for (int i = 0; i < 10; i++) { printf("%d\n", billy.materials[i]); }
 
 	assert(IsModelReady(billy));
 
@@ -31,8 +31,19 @@ int main() {
 	Vector3 position = {0.0f, 0.0f, 0.0f};
 	Vector3 scale = {100.0f, 100.0f, 10.0f};
 
+	// Load model animations.
+	int anim_count = 0;
+	unsigned int anim_index = 0;
+	unsigned int current_frame = 0;
+	ModelAnimation *animations = LoadModelAnimations("resources/billy.glb", &anim_count);
+
     // Main game loop.
     while (!WindowShouldClose()) {
+        // Update model animation
+        ModelAnimation anim = animations[anim_index];
+        current_frame = (current_frame + 1)%anim.frameCount;
+        UpdateModelAnimation(billy, anim, current_frame);
+
         BeginDrawing();
 			ClearBackground(BLACK);
 			SetTargetFPS(75);
