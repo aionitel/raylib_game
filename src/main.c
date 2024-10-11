@@ -20,10 +20,8 @@ int main() {
 	Model billy = LoadModel("resources/billy.glb");
 	Texture2D texture = LoadTexture("resources/Billy_baseColor.png");
 
-	// for (int i = 0; i < 10; i++) { printf("%d\n", billy.materials[i]); }
-	// printf("CHANGING MATERIALS\n");
-	// billy.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
-	// for (int i = 0; i < 10; i++) { printf("%d\n", billy.materials[i]); }
+	printf("CHANGING MODEL MATERIALS. \n");
+	billy.materials[1].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
 
 	assert(IsModelReady(billy));
 
@@ -46,12 +44,14 @@ int main() {
         UpdateCamera(&camera, CAMERA_FREE);
         // Update model animation
         ModelAnimation anim = animations[anim_index];
-        current_frame = (current_frame + 1)%anim.frameCount;
+        current_frame = (current_frame + 1) % anim.frameCount;
         UpdateModelAnimation(billy, anim, current_frame);
 
         BeginDrawing();
 			ClearBackground(BLACK);
 			DrawFPS(10, 10);
+
+			DrawTexture(texture, 100, 100, WHITE);
 
 			BeginMode3D(camera);
 				DrawGrid(10, 1.0f);
