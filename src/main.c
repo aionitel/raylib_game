@@ -27,13 +27,14 @@ int main() {
 
 	Vector2 texture_pos = {0.0f, 0.0f};
 	Vector3 position = {0.0f, 0.0f, 0.0f};
-	Vector3 scale = {50.0f, 50.0f, 10.0f};
+	Vector3 scale = {20.0f, 20.0f, 10.0f};
 
 	// Load model animations.
 	int anim_count = 0;
-	unsigned int anim_index = 0;
+	unsigned int anim_index = 1;
 	unsigned int current_frame = 0;
 	ModelAnimation *animations = LoadModelAnimations("resources/billy.glb", &anim_count);
+	ModelAnimation anim = animations[anim_index];
 
 	DisableCursor();
 	SetTargetFPS(60);
@@ -42,16 +43,14 @@ int main() {
     while (!WindowShouldClose()) {
         // Update camera.
         UpdateCamera(&camera, CAMERA_FREE);
+
         // Update model animation
-        ModelAnimation anim = animations[anim_index];
         current_frame = (current_frame + 1) % anim.frameCount;
         UpdateModelAnimation(billy, anim, current_frame);
 
         BeginDrawing();
 			ClearBackground(BLACK);
 			DrawFPS(10, 10);
-
-			DrawTexture(texture, 100, 100, WHITE);
 
 			BeginMode3D(camera);
 				DrawGrid(10, 1.0f);
