@@ -1,12 +1,43 @@
 #include <stdio.h>
 #include <assert.h>
 #include <raylib.h>
-#include "player.h"
 
 // Controller input.
 #define XBOX_360_LEGACY_NAME_ID "Xbox 360 Controller"
 #define XBOX_360_NAME_ID "Xbox 360 Controller"
 #define PS3_NAME_ID "Sony Playstaion(R)3 Controller"
+
+typedef struct {
+    Vector3 position;
+} Player;
+
+void init_player(Player *player, Vector3 *position) {
+    player->position = *position;
+}
+
+void move_player(Vector3 *position) {
+   int key = GetKeyPressed();
+
+    switch (key) {
+        case KEY_W:
+            position->y++;
+            break;
+        case KEY_S:
+            position->y--;
+            break;
+        case KEY_D:
+            position->x++;
+            break;
+        case KEY_A:
+            position->x--;
+            break;
+        case KEY_F:
+            position->x += 10;
+            break;
+        default:
+            break;
+    }
+}
 
 int main() {
 	const int HEIGHT = 720;
@@ -41,7 +72,8 @@ int main() {
 
 	// Load model animations.
 	int anim_count = 0;
-	unsigned int anim_index = 5;
+	unsigned int anim_index = 0;
+	unsigned int start_frame = 35;
 	unsigned int current_frame = 0;
 	ModelAnimation *animations = LoadModelAnimations("resources/billy.glb", &anim_count);
 	ModelAnimation anim = animations[anim_index];
@@ -58,6 +90,9 @@ int main() {
 
         // Update model animation
         current_frame = (current_frame + 1) % anim.frameCount;
+        if (current_frame >= 50) {
+            current_frame = start_frame;
+        }
         UpdateModelAnimation(billy, anim, current_frame);
 
         BeginDrawing();
