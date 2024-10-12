@@ -8,3 +8,6 @@ build:
 	${CC} ${LIBS} ${INCLUDE} ${SRC_FILES} ${FRAMEWORK}
 	./a.out
 	rm -rf ./a.out
+
+compile:
+	${CC} ${LIBS} ${INCLUDE} ${SRC_FILES} ${FRAMEWORK}
