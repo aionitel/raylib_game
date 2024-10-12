@@ -11,13 +11,12 @@ typedef struct {
     Vector3 position;
 } Player;
 
-void init_player(Player *player, Vector3 *position) {
-    player->position = *position;
-}
-
 void move_player(Vector3 *position) {
-   int key = GetKeyPressed();
+    if (IsKeyDown(KEY_S)) {
+        position->x -= 20;
+    }
 
+    int key = GetKeyPressed();
     switch (key) {
         case KEY_W:
             position->y++;
@@ -42,8 +41,6 @@ void move_player(Vector3 *position) {
 int main() {
 	const int HEIGHT = 720;
 	const int WIDTH = 1280;
-	const float scale = 40.0;
-	const Vector3 SCALE = {scale, scale, 0.0f};
 
 	InitWindow(WIDTH, HEIGHT, "Litterc");
 
@@ -56,23 +53,23 @@ int main() {
     camera.projection = CAMERA_PERSPECTIVE;             // Camera mode type
 
     // Player logic and model.
-    Player player;
-	init_player(&player, &(Vector3){0.0f, 0.0f, 0.0f});
+    Vector3 position = {0.0f, 0.0f, 0.0f};
+    Player player = {position};
 
 	Model billy = LoadModel("resources/billy.glb");
 	Texture2D texture = LoadTexture("resources/Billy_baseColor.png");
 	printf("CHANGING MODEL MATERIALS. \n");
 	billy.materials[1].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
 
-	Model coffee = LoadModel("resources/coffee_mug.glb");
+	Model cola = LoadModel("resources/cola_can.glb");
 
 	assert(IsModelReady(billy));
-	assert(IsModelReady(coffee));
+	assert(IsModelReady(cola));
 
 	// Load model animations.
 	int anim_count = 0;
-	unsigned int anim_index = 0;
-	unsigned int start_frame = 35;
+	unsigned int anim_index = 5;
+	unsigned int start_frame = 0;
 	unsigned int current_frame = 0;
 	ModelAnimation *animations = LoadModelAnimations("resources/billy.glb", &anim_count);
 	ModelAnimation anim = animations[anim_index];
@@ -90,7 +87,7 @@ int main() {
         // Update model animation
         current_frame = (current_frame + 1) % anim.frameCount;
         if (current_frame >= 50) {
-            current_frame = start_frame;
+            //current_frame = start_frame;
         }
         UpdateModelAnimation(billy, anim, current_frame);
 
@@ -100,8 +97,7 @@ int main() {
 
 			BeginMode3D(camera);
 				DrawGrid(999, 10.0f);
-				DrawModelEx(billy, player.position, (Vector3){0.0f, 0.0f, 0.0f}, 0.0f, SCALE, WHITE);
-				DrawModelEx(coffee, (Vector3){10.0f, 0.0f, 0.0f}, (Vector3){0.0f, 0.0f, 0.0f}, 0.0f, SCALE, WHITE);
+				DrawModel(billy, position, 50.0f, WHITE);
 			EndMode3D();
 
         EndDrawing();
@@ -109,7 +105,7 @@ int main() {
 
     UnloadTexture(texture);
     UnloadModel(billy);
-    UnloadModel(coffee);
+    UnloadModel(cola);
     CloseWindow();
     return 0;
 }
