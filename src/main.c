@@ -42,10 +42,10 @@ void move_player(Vector3 *position) {
 int main() {
 	const int HEIGHT = 720;
 	const int WIDTH = 1280;
-	InitWindow(WIDTH, HEIGHT, "Litterc");
+	const float scale = 40.0;
+	const Vector3 SCALE = {scale, scale, 0.0f};
 
-	Player player;
-	init_player(&player, &(Vector3){0.0f, 0.0f, 0.0f});
+	InitWindow(WIDTH, HEIGHT, "Litterc");
 
 	// Define the camera to look into our 3d world
     Camera camera = { 0 };
@@ -55,20 +55,19 @@ int main() {
     camera.fovy = 45.0f;                                // Camera field-of-view Y
     camera.projection = CAMERA_PERSPECTIVE;             // Camera mode type
 
-	// Load texture and model.
-	int mat_count = 2;
+    // Player logic and model.
+    Player player;
+	init_player(&player, &(Vector3){0.0f, 0.0f, 0.0f});
+
 	Model billy = LoadModel("resources/billy.glb");
 	Texture2D texture = LoadTexture("resources/Billy_baseColor.png");
-
-	Model cola_can = LoadModel("resources/cola_can.glb");
-
 	printf("CHANGING MODEL MATERIALS. \n");
 	billy.materials[1].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
 
-	assert(IsModelReady(billy));
+	Model coffee = LoadModel("resources/coffee_mug.glb");
 
-	Vector2 texture_pos = {0.0f, 0.0f};
-	Vector3 scale = {20.0f, 20.0f, 10.0f};
+	assert(IsModelReady(billy));
+	assert(IsModelReady(coffee));
 
 	// Load model animations.
 	int anim_count = 0;
@@ -101,8 +100,8 @@ int main() {
 
 			BeginMode3D(camera);
 				DrawGrid(999, 10.0f);
-				DrawModelEx(billy, player.position, (Vector3){0.0f, 0.0f, 0.0f}, 0.0f, scale, WHITE);
-				DrawModelEx(cola_can, (Vector3){10.0f, 0.0f, 0.0f}, (Vector3){0.0f, 0.0f, 0.0f}, 0.0f, scale, WHITE);
+				DrawModelEx(billy, player.position, (Vector3){0.0f, 0.0f, 0.0f}, 0.0f, SCALE, WHITE);
+				DrawModelEx(coffee, (Vector3){10.0f, 0.0f, 0.0f}, (Vector3){0.0f, 0.0f, 0.0f}, 0.0f, SCALE, WHITE);
 			EndMode3D();
 
         EndDrawing();
@@ -110,6 +109,7 @@ int main() {
 
     UnloadTexture(texture);
     UnloadModel(billy);
+    UnloadModel(coffee);
     CloseWindow();
     return 0;
 }
