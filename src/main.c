@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <raylib.h>
+#include "player.h"
 
 // Controller input.
 #define XBOX_360_LEGACY_NAME_ID "Xbox 360 Controller"
@@ -11,6 +12,9 @@ int main() {
 	const int HEIGHT = 720;
 	const int WIDTH = 1280;
 	InitWindow(WIDTH, HEIGHT, "Litterc");
+
+	Player player;
+	init_player(&player, &(Vector3){0.0f, 0.0f, 0.0f});
 
 	// Define the camera to look into our 3d world
     Camera camera = { 0 };
@@ -33,7 +37,6 @@ int main() {
 	assert(IsModelReady(billy));
 
 	Vector2 texture_pos = {0.0f, 0.0f};
-	Vector3 position = {0.0f, 0.0f, 0.0f};
 	Vector3 scale = {20.0f, 20.0f, 10.0f};
 
 	// Load model animations.
@@ -51,10 +54,7 @@ int main() {
         // Update camera.
         UpdateCamera(&camera, CAMERA_FREE);
 
-        // Input.
-        if (IsKeyDown(KEY_F)) {
-            position.x++;
-        }
+        move_player(&player.position);
 
         // Update model animation
         current_frame = (current_frame + 1) % anim.frameCount;
@@ -66,7 +66,7 @@ int main() {
 
 			BeginMode3D(camera);
 				DrawGrid(999, 10.0f);
-				DrawModelEx(billy, position, (Vector3){0.0f, 0.0f, 0.0f}, 0.0f, scale, WHITE);
+				DrawModelEx(billy, player.position, (Vector3){0.0f, 0.0f, 0.0f}, 0.0f, scale, WHITE);
 				DrawModelEx(cola_can, (Vector3){10.0f, 0.0f, 0.0f}, (Vector3){0.0f, 0.0f, 0.0f}, 0.0f, scale, WHITE);
 			EndMode3D();
 
