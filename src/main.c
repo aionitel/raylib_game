@@ -58,14 +58,15 @@ int main() {
 	printf("CHANGING MODEL MATERIALS. \n");
 	billy.materials[1].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
 
-	Model cola = LoadModel("resources/cola_can.glb");
+	Model coffee = LoadModel("resources/coffee.glb");
+	//coffee.materials[1].maps[MATERIAL_MAP_DIFFUSE].texture = coffee.materials[2].maps[MATERIAL_MAP_DIFFUSE].texture;
 
 	assert(IsModelReady(billy));
-	assert(IsModelReady(cola));
+	assert(IsModelReady(coffee));
 
 	// Load model animations.
 	int anim_count = 0;
-	unsigned int anim_index = 5;
+	unsigned int anim_index = 1;
 	unsigned int start_frame = 0;
 	unsigned int current_frame = 0;
 	ModelAnimation *animations = LoadModelAnimations("resources/billy.glb", &anim_count);
@@ -94,8 +95,22 @@ int main() {
 
 			BeginMode3D(camera);
 				DrawGrid(999, 10.0f);
-				DrawModelEx(billy, position, (Vector3){0.0f, 0.0f, 0.0f}, 0.0f, SCALE, WHITE);
-				DrawModel(cola, (Vector3){20.0f, 0.0f, 0.0f}, 50.0f, WHITE);
+				DrawModelEx(
+				    billy,
+					position,
+					(Vector3){0.0f, 0.0f, 0.0f},
+					0.0f,
+					SCALE,
+					WHITE
+				);
+				DrawModelEx(
+				    coffee,
+					(Vector3){20.0f, 0.0f, 0.0f,},
+   					(Vector3){0.0f, 0.0f, 0.0f},
+   					0.0f,
+   					(Vector3){1.0f, 1.0f, 1.0f},
+   					WHITE
+				);
 			EndMode3D();
 
         EndDrawing();
@@ -103,7 +118,7 @@ int main() {
 
     UnloadTexture(texture);
     UnloadModel(billy);
-    UnloadModel(cola);
+    UnloadModel(coffee);
     CloseWindow();
     return 0;
 }
