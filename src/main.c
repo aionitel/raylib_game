@@ -2,6 +2,12 @@
 #include <assert.h>
 #include <raylib.h>
 
+#if defined(PLATFORM_DESKTOP)
+    #define GLSL_VERSION            330
+#else   // PLATFORM_ANDROID, PLATFORM_WEB
+    #define GLSL_VERSION            100
+#endif
+
 typedef struct {
     Vector3 position;
 } Player;
@@ -66,7 +72,7 @@ int main() {
 
 	// Load model animations.
 	int anim_count = 0;
-	unsigned int anim_index = 1;
+	unsigned int anim_index = 5;
 	unsigned int start_frame = 0;
 	unsigned int current_frame = 0;
 	ModelAnimation *animations = LoadModelAnimations("resources/billy.glb", &anim_count);
@@ -84,8 +90,8 @@ int main() {
 
         // Update model animation
         current_frame = (current_frame + 1) % anim.frameCount;
-        if (current_frame >= 50) {
-            //current_frame = start_frame;
+        if (current_frame >= anim.frameCount) {
+            current_frame = start_frame;
         }
         UpdateModelAnimation(billy, anim, current_frame);
 
@@ -95,6 +101,10 @@ int main() {
 
 			BeginMode3D(camera);
 				DrawGrid(999, 10.0f);
+				DrawPoint3D(
+				    (Vector3){30.0f, 30.0f, 0.0f},
+					RED
+				);
 				DrawModelEx(
 				    billy,
 					position,
