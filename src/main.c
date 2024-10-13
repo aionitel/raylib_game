@@ -2,11 +2,6 @@
 #include <assert.h>
 #include <raylib.h>
 
-// Controller input.
-#define XBOX_360_LEGACY_NAME_ID "Xbox 360 Controller"
-#define XBOX_360_NAME_ID "Xbox 360 Controller"
-#define PS3_NAME_ID "Sony Playstaion(R)3 Controller"
-
 typedef struct {
     Vector3 position;
 } Player;
@@ -55,6 +50,8 @@ int main() {
     // Player logic and model.
     Vector3 position = {0.0f, 0.0f, 0.0f};
     Player player = {position};
+    const float scale = 50.0;
+    Vector3 SCALE = {scale, scale, scale};
 
 	Model billy = LoadModel("resources/billy.glb");
 	Texture2D texture = LoadTexture("resources/Billy_baseColor.png");
@@ -97,7 +94,8 @@ int main() {
 
 			BeginMode3D(camera);
 				DrawGrid(999, 10.0f);
-				DrawModel(billy, position, 50.0f, WHITE);
+				DrawModelEx(billy, position, (Vector3){0.0f, 0.0f, 0.0f}, 0.0f, SCALE, WHITE);
+				DrawModel(cola, (Vector3){20.0f, 0.0f, 0.0f}, 50.0f, WHITE);
 			EndMode3D();
 
         EndDrawing();
