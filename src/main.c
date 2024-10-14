@@ -8,7 +8,9 @@
 #else   // PLATFORM_ANDROID, PLATFORM_WEB
     #define GLSL_VERSION            100
 #endif
-#define MAX_ENTITIES 1000
+#define MAX_ENTITIES 1000     // Max number of entities allowed to spawn.s
+#define GRAVITY -9.81f         // Gravity constant (m/s²)
+#define  BOUNCE 0.7f   // Coefficient of restitution (bounciness factor)
 
 typedef struct {
     bool is_running;
@@ -18,25 +20,25 @@ typedef struct {
     ModelAnimation *animations[MAX_ENTITIES];
     Vector3 positions[MAX_ENTITIES];
     float velocities[MAX_ENTITIES]; // Only y velocities for now. (Applying gravity.)
+    float scales[MAX_ENTITIES];
     Camera camera;
 } State;
 
 static inline void move_player(Vector3 *position) {
     int key = GetKeyPressed();
-    const float SPEED = 190.0;
 
     switch (key) {
         case KEY_W:
-            position->z-- * SPEED;
+            position->z--;
             break;
        case KEY_S:
-            position->z++ * SPEED;
+            position->z++;
             break;
         case KEY_A:
-            position->x-- * SPEED;
+            position->x--;
             break;
         case KEY_D:
-            position->x++ * SPEED;
+            position->x++;
             break;
         default:
             break;
@@ -45,7 +47,7 @@ static inline void move_player(Vector3 *position) {
 
 State state = { 0 };
 
-void close_on_esc() {
+static inline void close_on_esc() {
     if (IsKeyPressed(KEY_ESCAPE)) {
         state.is_running = false;
     }
@@ -55,7 +57,39 @@ static inline void print_animation(ModelAnimation *animation) {
     printf("ANIMATION NAME: %s\n", animation[0].name);
 }
 
-void init() {
+void init_entities() {
+    // INIT player manually.
+    // Load player model and texture.
+    Vector3 player_position = {0.0f, 0.0f, 0.0f};
+   	Model billy = LoadModel("resources/billy.glb");
+	Texture2D texture = LoadTexture("resources/Billy_baseColor.png");
+	printf("CHANGING MODEL MATERIALS. \n");
+	billy.materials[1].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
+
+	// Load player model animations.
+	int anim_count = 0;
+	ModelAnimation *animations = LoadModelAnimations("resources/billy.glb", &anim_count);
+
+	// Set entity system index. (Player will always be 0)
+	state.entities[0] = 0;
+	state.entity_count += 1;
+	state.models[0] = billy;
+	state.animations[0] = animations;
+	state.positions[0] = player_position;
+	state.velocities[0] = 0.0f;
+	state.scales[0] = 50.0f;
+
+	// Load and add coffee entity.
+	Vector3 coffee_position = {30.0f, 0.0f, 0.0f};
+	Model coffee = LoadModel("resources/coffee.glb");
+	state.entity_count += 1;
+	state.models[1] = coffee;
+	state.positions[1] = coffee_position;
+	state.velocities[1] = 1.0f;
+	state.scales[1] = 1.0f;
+}
+
+static void init() {
     state.is_running = true;
 
    	const int HEIGHT = 720;
@@ -69,38 +103,17 @@ void init() {
     camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
     camera.fovy = 45.0f;                                // Camera field-of-view Y
     camera.projection = CAMERA_PERSPECTIVE;             // Camera mode type
+    state.camera = camera;
 
 	DisableCursor();
 	SetTargetFPS(60);
 
-    // INIT player manually.
-    // Load player model and texture.
-    Vector3 player_position = {0.0f, 0.0f, 0.0f};
-   	Model billy = LoadModel("resources/billy.glb");
-	Texture2D texture = LoadTexture("resources/Billy_baseColor.png");
-	printf("CHANGING MODEL MATERIALS. \n");
-	billy.materials[1].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
-
-	// Load player model animations.
-	// unsigned int anim_index = 5;
-	// unsigned int start_frame = 0;
-	// unsigned int current_frame = 0;
-	int anim_count = 0;
-	ModelAnimation *animations = LoadModelAnimations("resources/billy.glb", &anim_count);
-
-	// Set entity system index. (Player will always be 0)
-	state.entities[0] = 0;
-	state.entity_count += 1;
-	state.models[0] = billy;
-	state.animations[0] = animations;
-	state.positions[0] = player_position;
-	state.velocities[0] = 0.0f;
-	state.camera = camera;
+	init_entities();
 }
 
 unsigned int current_frame = 0;
 
-void update_player_animation(ModelAnimation *animations) {
+static void update_player_animation(ModelAnimation *animations) {
    	// Load model animations.
     int player_animation_index = 0;
     int animation_index = 5;
@@ -108,7 +121,6 @@ void update_player_animation(ModelAnimation *animations) {
 	unsigned int start_frame = 0;
 	Model model = state.models[player_animation_index];
 	ModelAnimation anim = animations[animation_index];
-	printf("Animation name: %s\n", anim.name);
 
     // Update model animation
     current_frame = (current_frame + 1) % anim.frameCount;
@@ -119,11 +131,25 @@ void update_player_animation(ModelAnimation *animations) {
     UpdateModelAnimation(model, anim, current_frame);
 }
 
-void update() {
+void update_physics(Vector3 *position, float velocity) {
+    if (IsKeyPressed(KEY_F)) {
+        position->y = 50.0f;
+    }
+
+    velocity *= GRAVITY * GetFrameTime() * 10.0;
+    position->y += velocity;
+
+    if (position->y <= 0) {
+        position->y = 0;
+    }
+}
+
+static void update() {
     close_on_esc();
 
+    update_physics(&state.positions[1], state.velocities[1]);
     update_player_animation(state.animations[0]);
-    //UpdateCamera(&state.camera, CAMERA_FREE);
+    UpdateCamera(&state.camera, CAMERA_FREE);
 
     move_player(&state.positions[0]);
 }
@@ -131,13 +157,14 @@ void update() {
 void draw() {
     DrawGrid(999, 10.0f);
 
-    // Draw player (index = 0) model.
-    DrawModel(
-        state.models[0],
-        state.positions[0],
-        50.0f,
-        WHITE
-    );
+    for (int i = 0; i < state.entity_count; i++) {
+        DrawModel(
+            state.models[i],
+            state.positions[i],
+            state.scales[i],
+            WHITE
+        );
+    }
 }
 
 int main() {
