@@ -17,6 +17,7 @@ typedef struct {
     ModelAnimation *animations[MAX_ENTITIES];
     Vector3 positions[MAX_ENTITIES];
     float velocities[MAX_ENTITIES]; // Only y velocities for now. (Applying gravity.)
+    Camera camera;
 } State;
 
 void move_player(Vector3 *position) {
@@ -40,17 +41,13 @@ void move_player(Vector3 *position) {
     }
 }
 
-// void apply_gravity(Entity *entity) {
-//     if (entity->gravity) {
-//         entity->position.y += entity->velocity * -9.8;
-//     }
-
-//     if (entity->position.y < 0) {
-//         entity->position.y = 0;
-//     }
-// }
-
 State state = { 0 };
+
+void close_on_esc() {
+    if (IsKeyPressed(KEY_ESCAPE)) {
+        state.is_running = false;
+    }
+}
 
 void print_state(const State *state) {
     printf("Game State:\n");
@@ -74,6 +71,21 @@ void print_state(const State *state) {
 void init() {
     state.is_running = true;
 
+   	const int HEIGHT = 720;
+	const int WIDTH = 1280;
+	InitWindow(WIDTH, HEIGHT, "Litterc");
+
+	// Define the camera to look into our 3d world
+    Camera camera = { 0 };
+    camera.position = (Vector3){ 10.0f, 100.0f, 100.0f }; // Camera position
+    camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
+    camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
+    camera.fovy = 45.0f;                                // Camera field-of-view Y
+    camera.projection = CAMERA_PERSPECTIVE;             // Camera mode type
+
+	DisableCursor();
+	SetTargetFPS(60);
+
     // INIT player manually.
     // Load player model and texture.
     Vector3 player_position = {0.0f, 0.0f, 0.0f};
@@ -96,11 +108,14 @@ void init() {
 	state.animations[0] = animations;
 	state.positions[0] = player_position;
 	state.velocities[0] = 0.0f;
+	state.camera = camera;
 
 	print_state(&state);
 }
 
 void update() {
+    close_on_esc();
+
    	// Load model animations.
     int player_animation_index = 0;
 	int anim_count = 0;
@@ -116,6 +131,9 @@ void update() {
     }
 
     UpdateModelAnimation(model, anim, current_frame);
+    UpdateCamera(&state.camera, CAMERA_FREE);
+
+    move_player(&state.positions[0]);
 }
 
 void draw() {
@@ -131,60 +149,19 @@ void draw() {
 }
 
 int main() {
-	const int HEIGHT = 720;
-	const int WIDTH = 1280;
-
-	InitWindow(WIDTH, HEIGHT, "Litterc");
-
-	// Define the camera to look into our 3d world
-    Camera camera = { 0 };
-    camera.position = (Vector3){ 10.0f, 100.0f, 100.0f }; // Camera position
-    camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
-    camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
-    camera.fovy = 45.0f;                                // Camera field-of-view Y
-    camera.projection = CAMERA_PERSPECTIVE;             // Camera mode type
-
-    // Player logic and model.
-    const float scale = 50.0;
-    Vector3 SCALE = {scale, scale, scale};
-
-	// Load model animations.
-	int anim_count = 0;
-	unsigned int anim_index = 5;
-	unsigned int start_frame = 0;
-	unsigned int current_frame = 0;
-	ModelAnimation *animations = LoadModelAnimations("resources/billy.glb", &anim_count);
-	ModelAnimation anim = animations[anim_index];
-
-	// Coffee 3D model.
-	Model coffee_model = LoadModel("resources/coffee.glb");
-
-	DisableCursor();
-	SetTargetFPS(60);
-
 	init();
 
     // Main game loop.
-    while (!WindowShouldClose()) {
-        // Update camera.
-        UpdateCamera(&camera, CAMERA_FREE);
+    while (state.is_running) {
         update();
-
-        // Update model animation
-        // current_frame = (current_frame + 1) % anim.frameCount;
-        // if (current_frame >= anim.frameCount) {
-        //     current_frame = start_frame;
-        // }
-        // UpdateModelAnimation(billy, anim, current_frame);
 
         BeginDrawing();
 			ClearBackground(BLACK);
 			DrawFPS(10, 10);
 
-			BeginMode3D(camera);
+			BeginMode3D(state.camera);
 				draw();
 			EndMode3D();
-
         EndDrawing();
     }
 
