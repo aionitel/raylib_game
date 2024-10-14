@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <assert.h>
 #include <raylib.h>
 
@@ -20,7 +21,7 @@ typedef struct {
     Camera camera;
 } State;
 
-void move_player(Vector3 *position) {
+static inline void move_player(Vector3 *position) {
     int key = GetKeyPressed();
 
     switch (key) {
@@ -49,23 +50,8 @@ void close_on_esc() {
     }
 }
 
-void print_state(const State *state) {
-    printf("Game State:\n");
-    printf("is_running: %s\n", state->is_running ? "true" : "false");
-    printf("Entity count: %d\n", state->entity_count);
-
-    for (int i = 0; i < state->entity_count; i++) {
-        printf("Entity %d:\n", i);
-        printf("  Index: %d\n", state->entities[i]);
-        if (state->animations[i] != NULL) {
-            printf("  Animation: %s\n", state->animations[i]->name); // Print the name of the animation
-        }
-        printf("  Position: (%f, %f, %f)\n",
-               state->positions[i].x,
-               state->positions[i].y,
-               state->positions[i].z);
-        printf("  Velocity: %f\n", state->velocities[i]);
-    }
+static inline void print_animation(ModelAnimation *animation) {
+    printf("ANIMATION NAME: %s\n", animation[0].name);
 }
 
 void init() {
@@ -109,20 +95,19 @@ void init() {
 	state.positions[0] = player_position;
 	state.velocities[0] = 0.0f;
 	state.camera = camera;
-
-	print_state(&state);
 }
 
-void update() {
-    close_on_esc();
+unsigned int current_frame = 0;
 
+void update_player_animation(ModelAnimation *animations) {
    	// Load model animations.
     int player_animation_index = 0;
+    int animation_index = 5;
 	int anim_count = 0;
 	unsigned int start_frame = 0;
-	unsigned int current_frame = 0;
 	Model model = state.models[player_animation_index];
-	ModelAnimation anim = *state.animations[player_animation_index];
+	ModelAnimation anim = animations[animation_index];
+	printf("Animation name: %s\n", anim.name);
 
     // Update model animation
     current_frame = (current_frame + 1) % anim.frameCount;
@@ -130,7 +115,13 @@ void update() {
         current_frame = start_frame;
     }
 
-    UpdateModelAnimation(model, anim, current_frame);
+    UpdateModelAnimation(model, *animations, current_frame);
+}
+
+void update() {
+    close_on_esc();
+
+    update_player_animation(state.animations[0]);
     UpdateCamera(&state.camera, CAMERA_FREE);
 
     move_player(&state.positions[0]);
