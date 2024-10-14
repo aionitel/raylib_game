@@ -77,16 +77,16 @@ void init_entities() {
 	state.animations[0] = animations;
 	state.positions[0] = player_position;
 	state.velocities[0] = 0.0f;
-	state.scales[0] = 50.0f;
+	state.scales[0] = 5.0f;
 
 	// Load and add coffee entity.
-	Vector3 coffee_position = {30.0f, 0.0f, 0.0f};
+	Vector3 coffee_position = {5.0f, 0.0f, 0.0f};
 	Model coffee = LoadModel("resources/coffee.glb");
 	state.entity_count += 1;
 	state.models[1] = coffee;
 	state.positions[1] = coffee_position;
 	state.velocities[1] = 1.0f;
-	state.scales[1] = 1.0f;
+	state.scales[1] = 0.1;
 }
 
 static void init() {
@@ -98,7 +98,7 @@ static void init() {
 
 	// Define the camera to look into our 3d world
     Camera camera = { 0 };
-    camera.position = (Vector3){ 10.0f, 100.0f, 100.0f }; // Camera position
+    camera.position = (Vector3){ 0.0f, 10.0f, 10.0f }; // Camera position
     camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
     camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
     camera.fovy = 45.0f;                                // Camera field-of-view Y
@@ -133,10 +133,10 @@ static void update_player_animation(ModelAnimation *animations) {
 
 void update_physics(Vector3 *position, float velocity) {
     if (IsKeyPressed(KEY_F)) {
-        position->y = 50.0f;
+        position->y = 20;
     }
 
-    velocity *= GRAVITY * GetFrameTime() * 10.0;
+    velocity *= GRAVITY * GetFrameTime();
     position->y += velocity;
 
     if (position->y <= 0) {
@@ -155,7 +155,7 @@ static void update() {
 }
 
 void draw() {
-    DrawGrid(999, 10.0f);
+    DrawGrid(999, 1.0f);
 
     for (int i = 0; i < state.entity_count; i++) {
         DrawModel(
