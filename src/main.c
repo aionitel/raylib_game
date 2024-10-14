@@ -23,19 +23,20 @@ typedef struct {
 
 static inline void move_player(Vector3 *position) {
     int key = GetKeyPressed();
+    const float SPEED = 190.0;
 
     switch (key) {
         case KEY_W:
-            position->z--;
+            position->z-- * SPEED;
             break;
        case KEY_S:
-            position->z++;
+            position->z++ * SPEED;
             break;
         case KEY_A:
-            position->x--;
+            position->x-- * SPEED;
             break;
         case KEY_D:
-            position->x++;
+            position->x++ * SPEED;
             break;
         default:
             break;
@@ -59,7 +60,7 @@ void init() {
 
    	const int HEIGHT = 720;
 	const int WIDTH = 1280;
-	InitWindow(WIDTH, HEIGHT, "Litterc");
+	InitWindow(WIDTH, HEIGHT, "ENTROPY");
 
 	// Define the camera to look into our 3d world
     Camera camera = { 0 };
@@ -115,14 +116,14 @@ void update_player_animation(ModelAnimation *animations) {
         current_frame = start_frame;
     }
 
-    UpdateModelAnimation(model, *animations, current_frame);
+    UpdateModelAnimation(model, anim, current_frame);
 }
 
 void update() {
     close_on_esc();
 
     update_player_animation(state.animations[0]);
-    UpdateCamera(&state.camera, CAMERA_FREE);
+    //UpdateCamera(&state.camera, CAMERA_FREE);
 
     move_player(&state.positions[0]);
 }
