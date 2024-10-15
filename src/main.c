@@ -12,39 +12,34 @@
 #define MAX_ENTITIES 1000     // Max number of entities allowed to spawn.s
 #define GRAVITY -9.8f         // Gravity constant (m/s²)
 #define  BOUNCE 0.7f          // Coefficient of restitution (bounciness factor)
+#define SPEED 10.0f
 
 typedef struct {
     bool is_running;
+    float rotation;
     int entity_count;
     int entities[MAX_ENTITIES];
     Model models[MAX_ENTITIES];
     ModelAnimation *animations[MAX_ENTITIES];
     Vector3 positions[MAX_ENTITIES];
     float velocities[MAX_ENTITIES]; // Only y velocities for now. (Applying gravity.)
-    float scales[MAX_ENTITIES];
+    Vector3 scales[MAX_ENTITIES];
     Vector3 offset[MAX_ENTITIES];
     Camera camera;
 } State;
 
-static inline void move_player(Vector3 *position) {
-    int key = GetKeyPressed();
+static inline void move_player(Vector3 *position, float *rotation) {
+    // Update rotation.
+    if (IsKeyDown(KEY_K)) *rotation = 0.0f;
+    if (IsKeyDown(KEY_I)) *rotation = 180.0f;
+    if (IsKeyDown(KEY_L)) *rotation = 90.0f;
+    if (IsKeyDown(KEY_J)) *rotation = -90.0f;
 
-    switch (key) {
-        case KEY_J:
-            position->x--;
-            break;
-       case KEY_L:
-            position->x++;
-            break;
-        case KEY_I:
-            position->z--;
-            break;
-        case KEY_K:
-            position->z++;
-            break;
-        default:
-            break;
-    }
+    // Update position.
+    if (IsKeyDown(KEY_I)) position->z -= GetFrameTime() * SPEED;
+    if (IsKeyDown(KEY_K)) position->z += GetFrameTime() * SPEED;
+    if (IsKeyDown(KEY_J)) position->x -= GetFrameTime() * SPEED;
+    if (IsKeyDown(KEY_L)) position->x += GetFrameTime() * SPEED;
 }
 
 State state = { 0 };
@@ -76,11 +71,12 @@ void init_entities() {
 	// Set entity system index. (Player will always be 0)
 	state.entities[0] = 0;
 	state.entity_count += 1;
+	state.rotation = 0.0;
 	state.models[0] = billy;
 	state.animations[0] = animations;
 	state.positions[0] = player_position;
 	state.velocities[0] = 0.0;
-	state.scales[0] = 5.0;
+	state.scales[0] = (Vector3){5.0f, 5.0f, 5.0f};
 	state.offset[0] = (Vector3){ 0 };
 
 	// Load and add coffee entity.
@@ -92,7 +88,7 @@ void init_entities() {
 	state.models[1] = coffee;
 	state.positions[1] = coffee_position;
 	state.velocities[1] = 1.0;
-	state.scales[1] = 0.1;
+	state.scales[1] = (Vector3){0.1f, 0.1f, 0.1f};
 	state.offset[1] = (Vector3){0.0f, 0.4f, 0.0f};
 
 	// Load and add Doritos entity.
@@ -107,7 +103,7 @@ void init_entities() {
 	state.models[2] = mc;
 	state.positions[2] = mc_position;
 	state.velocities[2] = 1.0;
-	state.scales[2] = 1.0;
+	state.scales[2] = (Vector3){1.0f, 1.0f, 1.0f};
 	state.offset[2] = (Vector3){0.0f, 1.0f, 0.0f};
 }
 
@@ -138,15 +134,15 @@ unsigned int current_frame = 0;
 static void update_player_animation(ModelAnimation *animations) {
    	// Load model animations.
     int player_animation_index = 0;
-    int animation_index = 5;
+    int animation_index = 0;
 	int anim_count = 0;
-	unsigned int start_frame = 0;
+	unsigned int start_frame = 225;
 	Model model = state.models[player_animation_index];
 	ModelAnimation anim = animations[animation_index];
 
     // Update model animation
     current_frame = (current_frame + 1) % anim.frameCount;
-    if (current_frame >= anim.frameCount) {
+    if (current_frame >= 275) {
         current_frame = start_frame;
     }
 
@@ -175,7 +171,7 @@ void update_physics(Vector3 *position, float *velocity) {
 
 static void update() {
     close_on_esc();
-    move_player(&state.positions[0]);
+    move_player(&state.positions[0], &state.rotation);
 
     update_physics(&state.positions[1], &state.velocities[1]);
     update_physics(&state.positions[2], &state.velocities[2]);
@@ -196,10 +192,12 @@ void draw() {
     DrawGrid(999, 1.0f);
 
     for (int i = 0; i < state.entity_count; i++) {
-        DrawModel(
-            state.models[i],
-            AddVector3(state.positions[i], state.offset[i]),
-            state.scales[i],
+        DrawModelEx(
+            state.models[i], // Model
+            AddVector3(state.positions[i], state.offset[i]), // Position
+            (Vector3){ 0.0f, 1.0f, 0.0f }, // Rotation axis
+            state.rotation, // Rotation angle
+            state.scales[i], // Scale
             WHITE
         );
     }
