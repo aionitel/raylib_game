@@ -16,13 +16,13 @@
 
 typedef struct {
     bool is_running;
-    float rotation;
     int entity_count;
     int entities[MAX_ENTITIES];
     Model models[MAX_ENTITIES];
     ModelAnimation *animations[MAX_ENTITIES];
     Vector3 positions[MAX_ENTITIES];
     float velocities[MAX_ENTITIES]; // Only y velocities for now. (Applying gravity.)
+    float rotation[MAX_ENTITIES];
     Vector3 scales[MAX_ENTITIES];
     Vector3 offset[MAX_ENTITIES];
     Camera camera;
@@ -71,11 +71,11 @@ void init_entities() {
 	// Set entity system index. (Player will always be 0)
 	state.entities[0] = 0;
 	state.entity_count += 1;
-	state.rotation = 0.0;
 	state.models[0] = billy;
 	state.animations[0] = animations;
 	state.positions[0] = player_position;
 	state.velocities[0] = 0.0;
+	state.rotation[0] = 0.0;
 	state.scales[0] = (Vector3){5.0f, 5.0f, 5.0f};
 	state.offset[0] = (Vector3){ 0 };
 
@@ -88,6 +88,7 @@ void init_entities() {
 	state.models[1] = coffee;
 	state.positions[1] = coffee_position;
 	state.velocities[1] = 1.0;
+	state.rotation[1] = 0.0;
 	state.scales[1] = (Vector3){0.1f, 0.1f, 0.1f};
 	state.offset[1] = (Vector3){0.0f, 0.4f, 0.0f};
 
@@ -103,6 +104,7 @@ void init_entities() {
 	state.models[2] = mc;
 	state.positions[2] = mc_position;
 	state.velocities[2] = 1.0;
+	state.rotation[2] = 0.0;
 	state.scales[2] = (Vector3){1.0f, 1.0f, 1.0f};
 	state.offset[2] = (Vector3){0.0f, 1.0f, 0.0f};
 }
@@ -171,7 +173,7 @@ void update_physics(Vector3 *position, float *velocity) {
 
 static void update() {
     close_on_esc();
-    move_player(&state.positions[0], &state.rotation);
+    move_player(&state.positions[0], &state.rotation[0]);
 
     update_physics(&state.positions[1], &state.velocities[1]);
     update_physics(&state.positions[2], &state.velocities[2]);
@@ -196,7 +198,7 @@ void draw() {
             state.models[i], // Model
             AddVector3(state.positions[i], state.offset[i]), // Position
             (Vector3){ 0.0f, 1.0f, 0.0f }, // Rotation axis
-            state.rotation, // Rotation angle
+            state.rotation[i], // Rotation angle
             state.scales[i], // Scale
             WHITE
         );
