@@ -9,8 +9,8 @@
     #define GLSL_VERSION            100
 #endif
 #define MAX_ENTITIES 1000     // Max number of entities allowed to spawn.s
-#define GRAVITY -9.81f         // Gravity constant (m/s²)
-#define  BOUNCE 0.7f   // Coefficient of restitution (bounciness factor)
+#define GRAVITY -9.8f         // Gravity constant (m/s²)
+#define  BOUNCE 0.7f          // Coefficient of restitution (bounciness factor)
 
 typedef struct {
     bool is_running;
@@ -98,7 +98,7 @@ static void init() {
 
 	// Define the camera to look into our 3d world
     Camera camera = { 0 };
-    camera.position = (Vector3){ 0.0f, 10.0f, 10.0f }; // Camera position
+    camera.position = (Vector3){ 0.0f, 20.0f, 20.0f }; // Camera position
     camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
     camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
     camera.fovy = 45.0f;                                // Camera field-of-view Y
@@ -131,27 +131,32 @@ static void update_player_animation(ModelAnimation *animations) {
     UpdateModelAnimation(model, anim, current_frame);
 }
 
-void update_physics(Vector3 *position, float velocity) {
+void update_physics(Vector3 *position, float *velocity) {
     if (IsKeyPressed(KEY_F)) {
-        position->y = 20;
+        position->y = 10;
     }
 
-    velocity *= GRAVITY * GetFrameTime();
-    position->y += velocity;
+    float dt = GetFrameTime();
+    *velocity += GRAVITY * dt;
+    position->y += *velocity * dt;
 
-    if (position->y <= 0) {
+    // Keep entity below ground level.
+    if (position->y < 0) {
         position->y = 0;
+    }
+
+    // Apply bounce to entity.
+    if (position->y <= 0) {
+        *velocity = -*velocity * BOUNCE;
     }
 }
 
 static void update() {
     close_on_esc();
 
-    update_physics(&state.positions[1], state.velocities[1]);
+    update_physics(&state.positions[1], &state.velocities[1]);
     update_player_animation(state.animations[0]);
     UpdateCamera(&state.camera, CAMERA_FREE);
-
-    move_player(&state.positions[0]);
 }
 
 void draw() {
