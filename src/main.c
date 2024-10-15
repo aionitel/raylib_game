@@ -22,6 +22,7 @@ typedef struct {
     Vector3 positions[MAX_ENTITIES];
     float velocities[MAX_ENTITIES]; // Only y velocities for now. (Applying gravity.)
     float scales[MAX_ENTITIES];
+    Vector3 offset[MAX_ENTITIES];
     Camera camera;
 } State;
 
@@ -66,6 +67,7 @@ void init_entities() {
 	Texture2D texture = LoadTexture("resources/Billy_baseColor.png");
 	printf("CHANGING MODEL MATERIALS. \n");
 	billy.materials[1].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
+	assert(IsModelReady(billy));
 
 	// Load player model animations.
 	int anim_count = 0;
@@ -77,31 +79,36 @@ void init_entities() {
 	state.models[0] = billy;
 	state.animations[0] = animations;
 	state.positions[0] = player_position;
-	state.velocities[0] = 0.0f;
-	state.scales[0] = 5.0f;
+	state.velocities[0] = 0.0;
+	state.scales[0] = 5.0;
+	state.offset[0] = (Vector3){ 0 };
 
 	// Load and add coffee entity.
 	Vector3 coffee_position = {5.0f, 0.0f, 0.0f};
 	Model coffee = LoadModel("resources/coffee.glb");
+	assert(IsModelReady(coffee));
+
 	state.entity_count += 1;
 	state.models[1] = coffee;
 	state.positions[1] = coffee_position;
-	state.velocities[1] = 1.0f;
+	state.velocities[1] = 1.0;
 	state.scales[1] = 0.1;
+	state.offset[1] = (Vector3){0.0f, 0.4f, 0.0f};
 
 	// Load and add Doritos entity.
-	Vector3 doritos_position = {10.0f, 0.0f, 0.0f};
-	Model doritos = LoadModel("resources/mcdonalds_bag.glb");
-	assert(IsModelReady(doritos));
-
+	Vector3 mc_position = {10.0f, 0.0f, 0.0f};
+	Model mc = LoadModel("resources/mcdonalds_bag.glb");
 	Texture2D mc_texture = LoadTexture("resources/mcdonalds_bag.png");
 	printf("CHANGING MODEL MATERIALS. \n");
-	doritos.materials[1].maps[MATERIAL_MAP_DIFFUSE].texture = mc_texture;
+	mc.materials[1].maps[MATERIAL_MAP_DIFFUSE].texture = mc_texture;
+	assert(IsModelReady(mc));
+
 	state.entity_count += 1;
-	state.models[2] = doritos;
-	state.positions[2] = doritos_position;
-	state.velocities[2] = 1.0f;
+	state.models[2] = mc;
+	state.positions[2] = mc_position;
+	state.velocities[2] = 1.0;
 	state.scales[2] = 1.0;
+	state.offset[2] = (Vector3){0.0f, 1.0f, 0.0f};
 }
 
 static void init() {
@@ -171,8 +178,18 @@ static void update() {
     move_player(&state.positions[0]);
 
     update_physics(&state.positions[1], &state.velocities[1]);
+    update_physics(&state.positions[2], &state.velocities[2]);
     update_player_animation(state.animations[0]);
     UpdateCamera(&state.camera, CAMERA_FREE);
+}
+
+// Custom function to add two Vector3 vectors
+Vector3 AddVector3(Vector3 v1, Vector3 v2) {
+    Vector3 result;
+    result.x = v1.x + v2.x;
+    result.y = v1.y + v2.y;
+    result.z = v1.z + v2.z;
+    return result;
 }
 
 void draw() {
@@ -181,7 +198,7 @@ void draw() {
     for (int i = 0; i < state.entity_count; i++) {
         DrawModel(
             state.models[i],
-            state.positions[i],
+            AddVector3(state.positions[i], state.offset[i]),
             state.scales[i],
             WHITE
         );
