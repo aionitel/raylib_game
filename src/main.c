@@ -11,24 +11,30 @@
 
 #define MAX_ENTITIES 1000     // Max number of entities allowed to spawn.s
 #define GRAVITY -9.8f         // Gravity constant (m/s²)
-#define  BOUNCE 0.7f          // Coefficient of restitution (bounciness factor)
+#define BOUNCE 0.7f          // Coefficient of restitution (bounciness factor)
 #define SPEED 10.0f
 
 typedef struct {
     bool is_running;
     int entity_count;
-    int entities[MAX_ENTITIES];
-    Model models[MAX_ENTITIES];
-    ModelAnimation *animations[MAX_ENTITIES];
-    Vector3 positions[MAX_ENTITIES];
+    float frictions[MAX_ENTITIES];
     float velocities[MAX_ENTITIES]; // Only y velocities for now. (Applying gravity.)
     float rotation[MAX_ENTITIES];
+    Model models[MAX_ENTITIES];
+    ModelAnimation *animations[MAX_ENTITIES];
+    int animation_indices[MAX_ENTITIES];
+    Vector3 positions[MAX_ENTITIES];
     Vector3 scales[MAX_ENTITIES];
     Vector3 offset[MAX_ENTITIES];
     Camera camera;
 } State;
 
-static inline void move_player(Vector3 *position, float *rotation) {
+State state = { 0 };
+
+static inline void move_player(Vector3 *position, float *rotation, int *animation_index) {
+    int key = GetKeyPressed();
+    if (!key) *animation_index = 5;
+
     // Update rotation.
     if (IsKeyDown(KEY_K)) *rotation = 0.0f;
     if (IsKeyDown(KEY_I)) *rotation = 180.0f;
@@ -36,13 +42,23 @@ static inline void move_player(Vector3 *position, float *rotation) {
     if (IsKeyDown(KEY_J)) *rotation = -90.0f;
 
     // Update position.
-    if (IsKeyDown(KEY_I)) position->z -= GetFrameTime() * SPEED;
-    if (IsKeyDown(KEY_K)) position->z += GetFrameTime() * SPEED;
-    if (IsKeyDown(KEY_J)) position->x -= GetFrameTime() * SPEED;
-    if (IsKeyDown(KEY_L)) position->x += GetFrameTime() * SPEED;
+    if (IsKeyDown(KEY_I)) {
+        position->z -= GetFrameTime() * SPEED;
+        *animation_index = 0;
+    }
+    if (IsKeyDown(KEY_K)) {
+        position->z += GetFrameTime() * SPEED;
+        *animation_index = 0;
+    }
+    if (IsKeyDown(KEY_J)) {
+        position->x -= GetFrameTime() * SPEED;
+        *animation_index = 0;
+    }
+    if (IsKeyDown(KEY_L)) {
+        position->x += GetFrameTime() * SPEED;
+        *animation_index = 0;
+    }
 }
-
-State state = { 0 };
 
 static inline void close_on_esc() {
     if (IsKeyPressed(KEY_ESCAPE)) {
@@ -69,8 +85,8 @@ void init_entities() {
 	ModelAnimation *animations = LoadModelAnimations("resources/billy.glb", &anim_count);
 
 	// Set entity system index. (Player will always be 0)
-	state.entities[0] = 0;
 	state.entity_count += 1;
+	state.animation_indices[0] = 5;
 	state.models[0] = billy;
 	state.animations[0] = animations;
 	state.positions[0] = player_position;
@@ -136,16 +152,23 @@ unsigned int current_frame = 0;
 static void update_player_animation(ModelAnimation *animations) {
    	// Load model animations.
     int player_animation_index = 0;
-    int animation_index = 0;
 	int anim_count = 0;
 	unsigned int start_frame = 225;
 	Model model = state.models[player_animation_index];
-	ModelAnimation anim = animations[animation_index];
+	ModelAnimation anim = animations[state.animation_indices[0]];
+	printf("ANIMATION INDEX: %i\n", state.animation_indices[0]);
 
-    // Update model animation
-    current_frame = (current_frame + 1) % anim.frameCount;
-    if (current_frame >= 275) {
-        current_frame = start_frame;
+    // Update model animation.
+    if (state.animation_indices[0] == 0) { // Running animation.
+        current_frame = (current_frame + 1) % anim.frameCount;
+        if (current_frame >= 275) {
+            current_frame = start_frame;
+        }
+    } else {
+        current_frame = (current_frame + 1) % anim.frameCount;
+        if (current_frame >= anim.frameCount) {
+            current_frame = start_frame;
+        }
     }
 
     UpdateModelAnimation(model, anim, current_frame);
@@ -173,7 +196,7 @@ void update_physics(Vector3 *position, float *velocity) {
 
 static void update() {
     close_on_esc();
-    move_player(&state.positions[0], &state.rotation[0]);
+    move_player(&state.positions[0], &state.rotation[0], &state.animation_indices[0]);
 
     update_physics(&state.positions[1], &state.velocities[1]);
     update_physics(&state.positions[2], &state.velocities[2]);
