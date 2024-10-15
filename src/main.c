@@ -8,6 +8,7 @@
 #else   // PLATFORM_ANDROID, PLATFORM_WEB
     #define GLSL_VERSION            100
 #endif
+
 #define MAX_ENTITIES 1000     // Max number of entities allowed to spawn.s
 #define GRAVITY -9.8f         // Gravity constant (m/s²)
 #define  BOUNCE 0.7f          // Coefficient of restitution (bounciness factor)
@@ -28,17 +29,17 @@ static inline void move_player(Vector3 *position) {
     int key = GetKeyPressed();
 
     switch (key) {
-        case KEY_W:
-            position->z--;
-            break;
-       case KEY_S:
-            position->z++;
-            break;
-        case KEY_A:
+        case KEY_J:
             position->x--;
             break;
-        case KEY_D:
+       case KEY_L:
             position->x++;
+            break;
+        case KEY_I:
+            position->z--;
+            break;
+        case KEY_K:
+            position->z++;
             break;
         default:
             break;
@@ -87,6 +88,20 @@ void init_entities() {
 	state.positions[1] = coffee_position;
 	state.velocities[1] = 1.0f;
 	state.scales[1] = 0.1;
+
+	// Load and add Doritos entity.
+	Vector3 doritos_position = {10.0f, 0.0f, 0.0f};
+	Model doritos = LoadModel("resources/mcdonalds_bag.glb");
+	assert(IsModelReady(doritos));
+
+	Texture2D mc_texture = LoadTexture("resources/mcdonalds_bag.png");
+	printf("CHANGING MODEL MATERIALS. \n");
+	doritos.materials[1].maps[MATERIAL_MAP_DIFFUSE].texture = mc_texture;
+	state.entity_count += 1;
+	state.models[2] = doritos;
+	state.positions[2] = doritos_position;
+	state.velocities[2] = 1.0f;
+	state.scales[2] = 1.0;
 }
 
 static void init() {
@@ -153,6 +168,7 @@ void update_physics(Vector3 *position, float *velocity) {
 
 static void update() {
     close_on_esc();
+    move_player(&state.positions[0]);
 
     update_physics(&state.positions[1], &state.velocities[1]);
     update_player_animation(state.animations[0]);
