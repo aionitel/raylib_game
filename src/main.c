@@ -227,7 +227,7 @@ void draw_bounding_box(Vector3 position, BoundingBox bbox, float scale) {
 
     Vector3 aligned_position = {
         position.x,
-        position.y * 2,
+        position.y + 2.0f,
         position.z
     };
     Vector3 size = {
@@ -254,8 +254,7 @@ static void draw() {
             AddVector3(state.positions[i], state.offset[i]), // Position
             (Vector3){ 0.0f, 1.0f, 0.0f }, // Rotation axis
             state.rotation[i], // Rotation angle
-            //state.scales[i], // Scale
-            (Vector3){ 1.0f, 1.0f, 1.0f },
+            state.scales[i], // Scale
             WHITE
         );
     }
