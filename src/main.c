@@ -11,7 +11,7 @@
 
 #define MAX_ENTITIES 1000     // Max number of entities allowed to spawn.s
 #define GRAVITY -9.8f         // Gravity constant (m/s²)
-#define BOUNCE 0.7f          // Coefficient of restitution (bounciness factor)
+#define BOUNCE 0.3f          // Bounciness coefficient
 #define SPEED 10.0f
 
 typedef struct {
@@ -20,6 +20,7 @@ typedef struct {
     float frictions[MAX_ENTITIES];
     float velocities[MAX_ENTITIES]; // Only y velocities for now. (Applying gravity.)
     float rotation[MAX_ENTITIES];
+    BoundingBox bboxes[MAX_ENTITIES];
     Model models[MAX_ENTITIES];
     ModelAnimation *animations[MAX_ENTITIES];
     int animation_indices[MAX_ENTITIES];
@@ -31,7 +32,7 @@ typedef struct {
 
 State state = { 0 };
 
-static inline void move_player(Vector3 *position, float *rotation, int *animation_index) {
+static void move_player(Vector3 *position, float *rotation, int *animation_index) {
     int key = GetKeyPressed();
     if (!key) *animation_index = 5;
 
@@ -60,17 +61,17 @@ static inline void move_player(Vector3 *position, float *rotation, int *animatio
     }
 }
 
-static inline void close_on_esc() {
+static void close_on_esc() {
     if (IsKeyPressed(KEY_ESCAPE)) {
         state.is_running = false;
     }
 }
 
-static inline void print_animation(ModelAnimation *animation) {
+static void print_animation(ModelAnimation *animation) {
     printf("ANIMATION NAME: %s\n", animation[0].name);
 }
 
-void init_entities() {
+static inline void init_entities() {
     // INIT player manually.
     // Load player model and texture.
     Vector3 player_position = {0.0f, 0.0f, 0.0f};
@@ -79,6 +80,7 @@ void init_entities() {
 	printf("CHANGING MODEL MATERIALS. \n");
 	billy.materials[1].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
 	assert(IsModelReady(billy));
+	BoundingBox bbox = GetModelBoundingBox(billy);
 
 	// Load player model animations.
 	int anim_count = 0;
@@ -87,6 +89,7 @@ void init_entities() {
 	// Set entity system index. (Player will always be 0)
 	state.entity_count += 1;
 	state.animation_indices[0] = 5;
+	state.bboxes[0] = bbox;
 	state.models[0] = billy;
 	state.animations[0] = animations;
 	state.positions[0] = player_position;
@@ -125,7 +128,7 @@ void init_entities() {
 	state.offset[2] = (Vector3){0.0f, 1.0f, 0.0f};
 }
 
-static void init() {
+static inline void init() {
     state.is_running = true;
 
    	const int HEIGHT = 720;
@@ -149,14 +152,13 @@ static void init() {
 
 unsigned int current_frame = 0;
 
-static void update_player_animation(ModelAnimation *animations) {
+void update_player_animation(ModelAnimation *animations) {
    	// Load model animations.
     int player_animation_index = 0;
 	int anim_count = 0;
 	unsigned int start_frame = 225;
 	Model model = state.models[player_animation_index];
 	ModelAnimation anim = animations[state.animation_indices[0]];
-	printf("ANIMATION INDEX: %i\n", state.animation_indices[0]);
 
     // Update model animation.
     if (state.animation_indices[0] == 0) { // Running animation.
@@ -213,7 +215,37 @@ Vector3 AddVector3(Vector3 v1, Vector3 v2) {
     return result;
 }
 
-void draw() {
+void draw_bounding_box(Vector3 position, BoundingBox bbox, float scale) {
+    // Print the min and max corners of the bounding box
+    printf("SCALE: %f\n", scale);
+    printf("Bounding Box Min: (%.2f, %.2f, %.2f)\n", bbox.min.x, bbox.min.y, bbox.min.z);
+    printf("Bounding Box Max: (%.2f, %.2f, %.2f)\n", bbox.max.x, bbox.max.y, bbox.max.z);
+
+    float length = bbox.min.x + bbox.max.x;
+    float height = bbox.min.y + bbox.max.y;
+    float width = bbox.min.z + bbox.max.z;
+
+    Vector3 aligned_position = {
+        position.x,
+        position.y * 2,
+        position.z
+    };
+    Vector3 size = {
+        length,
+        height,
+        width
+    };
+
+    DrawCubeWires(
+        aligned_position,
+        width * scale,
+        height * scale,
+        length * scale,
+        RED
+    );
+}
+
+static void draw() {
     DrawGrid(999, 1.0f);
 
     for (int i = 0; i < state.entity_count; i++) {
@@ -222,10 +254,13 @@ void draw() {
             AddVector3(state.positions[i], state.offset[i]), // Position
             (Vector3){ 0.0f, 1.0f, 0.0f }, // Rotation axis
             state.rotation[i], // Rotation angle
-            state.scales[i], // Scale
+            //state.scales[i], // Scale
+            (Vector3){ 1.0f, 1.0f, 1.0f },
             WHITE
         );
     }
+
+    draw_bounding_box(state.positions[0], state.bboxes[0], state.scales[0].x);
 }
 
 int main() {
@@ -245,6 +280,9 @@ int main() {
         EndDrawing();
     }
 
+    for (int i = 0; i < state.entity_count; i++) {
+        UnloadModel(state.models[i]);
+    }
     CloseWindow();
     return 0;
 }
