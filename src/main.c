@@ -19,6 +19,29 @@ typedef struct {
     Vector3 max;
 } AABB;
 
+bool aabb_is_collision(AABB a, AABB b, Vector3 posA, Vector3 posB) {
+    // Apply the positions to the AABBs' min and max points to get world coordinates
+    Vector3 aMinWorld = (Vector3){ a.min.x + posA.x, a.min.y + posA.y, a.min.z + posA.z };
+    Vector3 aMaxWorld = (Vector3){ a.max.x + posA.x, a.max.y + posA.y, a.max.z + posA.z };
+
+    Vector3 bMinWorld = (Vector3){ b.min.x + posB.x, b.min.y + posB.y, b.min.z + posB.z };
+    Vector3 bMaxWorld = (Vector3){ b.max.x + posB.x, b.max.y + posB.y, b.max.z + posB.z };
+
+    // Check for separation on the X, Y, and Z axes
+    if (aMaxWorld.x < bMinWorld.x || aMinWorld.x > bMaxWorld.x) return false;  // Separated on X-axis
+    if (aMaxWorld.y < bMinWorld.y || aMinWorld.y > bMaxWorld.y) return false;  // Separated on Y-axis
+    if (aMaxWorld.z < bMinWorld.z || aMinWorld.z > bMaxWorld.z) return false;  // Separated on Z-axis
+
+    // If no separation on any axis, the AABBs are colliding
+    return true;
+}
+
+void print_aabb(AABB aabb) {
+    // Print the min and max corners of the bounding box
+    printf("Bounding Box MIN: (%.2f, %.2f, %.2f)\n", aabb.min.x, aabb.min.y, aabb.min.z);
+    printf("Bounding Box MAX: (%.2f, %.2f, %.2f)\n", aabb.max.x, aabb.max.y, aabb.max.z);
+}
+
 typedef struct {
     bool is_running;
     int entity_count;
@@ -70,10 +93,6 @@ static void close_on_esc() {
     if (IsKeyPressed(KEY_ESCAPE)) {
         state.is_running = false;
     }
-}
-
-static void print_animation(ModelAnimation *animation) {
-    printf("ANIMATION NAME: %s\n", animation[0].name);
 }
 
 static inline void init_entities() {
@@ -154,12 +173,11 @@ static inline void init() {
 
 unsigned int current_frame = 0;
 
-void update_player_animation(ModelAnimation *animations) {
+void update_player_animation(Model model, ModelAnimation *animations) {
    	// Load model animations.
     int player_animation_index = 0;
 	int anim_count = 0;
 	unsigned int start_frame = 225;
-	Model model = state.models[player_animation_index];
 	ModelAnimation anim = animations[state.animation_indices[0]];
 
     // Update model animation.
@@ -204,8 +222,12 @@ static void update() {
 
     update_physics(&state.positions[1], &state.velocities[1]);
     update_physics(&state.positions[2], &state.velocities[2]);
-    update_player_animation(state.animations[0]);
+    update_player_animation(state.models[0], state.animations[0]);
     UpdateCamera(&state.camera, CAMERA_FREE);
+
+    if (aabb_is_collision(state.aabbs[0], state.aabbs[1], state.positions[0], state.positions[1])) {
+        printf("COLLISION DETECTED \n");
+    }
 }
 
 // Custom function to add two Vector3 vectors
@@ -217,15 +239,7 @@ Vector3 AddVector3(Vector3 v1, Vector3 v2) {
     return result;
 }
 
-void print_aabb(AABB aabb) {
-    // Print the min and max corners of the bounding box
-    printf("Bounding Box MIN: (%.2f, %.2f, %.2f)\n", aabb.min.x, aabb.min.y, aabb.min.z);
-    printf("Bounding Box MAX: (%.2f, %.2f, %.2f)\n", aabb.max.x, aabb.max.y, aabb.max.z);
-}
-
 void draw_bounding_box(Vector3 position, AABB aabb, float aabb_y_offset, float scale, Vector3 offset) {
-    print_aabb(aabb);
-
     float length = (aabb.min.x + aabb.max.x);
     float height = (aabb.min.y + aabb.max.y);
     float width = (aabb.min.z + aabb.max.z);
