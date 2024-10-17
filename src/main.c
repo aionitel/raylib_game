@@ -15,12 +15,16 @@
 #define SPEED 10.0f
 
 typedef struct {
+    Vector3 min;
+    Vector3 max;
+} AABB;
+
+typedef struct {
     bool is_running;
     int entity_count;
-    float frictions[MAX_ENTITIES];
     float velocities[MAX_ENTITIES]; // Only y velocities for now. (Applying gravity.)
     float rotation[MAX_ENTITIES];
-    BoundingBox bboxes[MAX_ENTITIES];
+    AABB aabbs[MAX_ENTITIES];
     Model models[MAX_ENTITIES];
     ModelAnimation *animations[MAX_ENTITIES];
     int animation_indices[MAX_ENTITIES];
@@ -37,26 +41,26 @@ static void move_player(Vector3 *position, float *rotation, int *animation_index
     if (!key) *animation_index = 5;
 
     // Update rotation.
-    if (IsKeyDown(KEY_K)) *rotation = 0.0f;
-    if (IsKeyDown(KEY_I)) *rotation = 180.0f;
-    if (IsKeyDown(KEY_L)) *rotation = 90.0f;
-    if (IsKeyDown(KEY_J)) *rotation = -90.0f;
+    if (IsKeyDown(KEY_L)) *rotation = 0.0f;
+    if (IsKeyDown(KEY_J)) *rotation = 180.0f;
+    if (IsKeyDown(KEY_I)) *rotation = 90.0f;
+    if (IsKeyDown(KEY_K)) *rotation = -90.0f;
 
     // Update position.
     if (IsKeyDown(KEY_I)) {
-        position->z -= GetFrameTime() * SPEED;
+        position->x += GetFrameTime() * SPEED;
         *animation_index = 0;
     }
     if (IsKeyDown(KEY_K)) {
-        position->z += GetFrameTime() * SPEED;
-        *animation_index = 0;
-    }
-    if (IsKeyDown(KEY_J)) {
         position->x -= GetFrameTime() * SPEED;
         *animation_index = 0;
     }
+    if (IsKeyDown(KEY_J)) {
+        position->z -= GetFrameTime() * SPEED;
+        *animation_index = 0;
+    }
     if (IsKeyDown(KEY_L)) {
-        position->x += GetFrameTime() * SPEED;
+        position->z += GetFrameTime() * SPEED;
         *animation_index = 0;
     }
 }
@@ -80,7 +84,12 @@ static inline void init_entities() {
 	printf("CHANGING MODEL MATERIALS. \n");
 	billy.materials[1].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
 	assert(IsModelReady(billy));
-	BoundingBox bbox = GetModelBoundingBox(billy);
+
+	// Create bounding box for model.
+	AABB billy_aabb = {
+	   (Vector3){-1.0f, 0.0f, 0.0f},
+	   (Vector3){1.5f, 1.0f, 0.5f}
+	};
 
 	// Load player model animations.
 	int anim_count = 0;
@@ -89,7 +98,7 @@ static inline void init_entities() {
 	// Set entity system index. (Player will always be 0)
 	state.entity_count += 1;
 	state.animation_indices[0] = 5;
-	state.bboxes[0] = bbox;
+	state.aabbs[0] = billy_aabb;
 	state.models[0] = billy;
 	state.animations[0] = animations;
 	state.positions[0] = player_position;
@@ -111,7 +120,7 @@ static inline void init_entities() {
 	state.scales[1] = (Vector3){0.1f, 0.1f, 0.1f};
 	state.offset[1] = (Vector3){0.0f, 0.4f, 0.0f};
 
-	// Load and add Doritos entity.
+	// Load and add McDonald's bag entity.
 	Vector3 mc_position = {10.0f, 0.0f, 0.0f};
 	Model mc = LoadModel("resources/mcdonalds_bag.glb");
 	Texture2D mc_texture = LoadTexture("resources/mcdonalds_bag.png");
@@ -137,7 +146,7 @@ static inline void init() {
 
 	// Define the camera to look into our 3d world
     Camera camera = { 0 };
-    camera.position = (Vector3){ 0.0f, 20.0f, 20.0f }; // Camera position
+    camera.position = (Vector3){ -10.0f, 10.0f, 0.0f }; // Camera position
     camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
     camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
     camera.fovy = 45.0f;                                // Camera field-of-view Y
@@ -215,32 +224,24 @@ Vector3 AddVector3(Vector3 v1, Vector3 v2) {
     return result;
 }
 
-void draw_bounding_box(Vector3 position, BoundingBox bbox, float scale) {
+void print_aabb(AABB aabb) {
     // Print the min and max corners of the bounding box
-    printf("SCALE: %f\n", scale);
-    printf("Bounding Box Min: (%.2f, %.2f, %.2f)\n", bbox.min.x, bbox.min.y, bbox.min.z);
-    printf("Bounding Box Max: (%.2f, %.2f, %.2f)\n", bbox.max.x, bbox.max.y, bbox.max.z);
+    printf("Bounding Box MIN: (%.2f, %.2f, %.2f)\n", aabb.min.x, aabb.min.y, aabb.min.z);
+    printf("Bounding Box MAX: (%.2f, %.2f, %.2f)\n", aabb.max.x, aabb.max.y, aabb.max.z);
+}
 
-    float length = bbox.min.x + bbox.max.x;
-    float height = bbox.min.y + bbox.max.y;
-    float width = bbox.min.z + bbox.max.z;
+void draw_bounding_box(Vector3 position, AABB aabb, float scale, Vector3 offset) {
+    print_aabb(aabb);
 
-    Vector3 aligned_position = {
-        position.x,
-        position.y + 2.0f,
-        position.z
-    };
-    Vector3 size = {
-        length,
-        height,
-        width
-    };
+    float length = (aabb.min.x + aabb.max.x);
+    float height = (aabb.min.y + aabb.max.y);
+    float width = (aabb.min.z + aabb.max.z);
 
     DrawCubeWires(
-        aligned_position,
-        width * scale,
-        height * scale,
-        length * scale,
+        position,
+        width,
+        height,
+        length,
         RED
     );
 }
@@ -259,7 +260,11 @@ static void draw() {
         );
     }
 
-    draw_bounding_box(state.positions[0], state.bboxes[0], state.scales[0].x);
+    for (int i = 0; i < state.entity_count; i++) {
+        draw_bounding_box(state.positions[i], state.aabbs[i], state.scales[i].x, state.offset[i]);
+    }
+
+    DrawPoint3D(state.positions[0], BLUE);
 }
 
 int main() {
