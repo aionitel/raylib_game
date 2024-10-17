@@ -87,8 +87,8 @@ static inline void init_entities() {
 
 	// Create bounding box for model.
 	AABB billy_aabb = {
-	   (Vector3){-1.0f, 0.0f, 0.0f},
-	   (Vector3){1.5f, 1.0f, 0.5f}
+	   (Vector3){-4.0f, 0.0f, -4.0f},
+	   (Vector3){6.0f, 4.0f, 6.0f}
 	};
 
 	// Load player model animations.
@@ -103,7 +103,7 @@ static inline void init_entities() {
 	state.animations[0] = animations;
 	state.positions[0] = player_position;
 	state.velocities[0] = 0.0;
-	state.rotation[0] = 0.0;
+	state.rotation[0] = -90.0f;
 	state.scales[0] = (Vector3){5.0f, 5.0f, 5.0f};
 	state.offset[0] = (Vector3){ 0 };
 
@@ -237,8 +237,14 @@ void draw_bounding_box(Vector3 position, AABB aabb, float scale, Vector3 offset)
     float height = (aabb.min.y + aabb.max.y);
     float width = (aabb.min.z + aabb.max.z);
 
+    Vector3 new_pos = {
+        position.x,
+        position.y + 2.0f,
+        position.z
+    };
+
     DrawCubeWires(
-        position,
+        new_pos,
         width,
         height,
         length,
