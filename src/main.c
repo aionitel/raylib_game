@@ -25,6 +25,7 @@ typedef struct {
     float velocities[MAX_ENTITIES]; // Only y velocities for now. (Applying gravity.)
     float rotation[MAX_ENTITIES];
     AABB aabbs[MAX_ENTITIES];
+    float aabbs_y_offset[MAX_ENTITIES];
     Model models[MAX_ENTITIES];
     ModelAnimation *animations[MAX_ENTITIES];
     int animation_indices[MAX_ENTITIES];
@@ -99,6 +100,7 @@ static inline void init_entities() {
 	state.entity_count += 1;
 	state.animation_indices[0] = 5;
 	state.aabbs[0] = billy_aabb;
+	state.aabbs_y_offset[0] = 2.0f;
 	state.models[0] = billy;
 	state.animations[0] = animations;
 	state.positions[0] = player_position;
@@ -112,29 +114,20 @@ static inline void init_entities() {
 	Model coffee = LoadModel("resources/coffee.glb");
 	assert(IsModelReady(coffee));
 
+	AABB coffee_aabb = {
+	   (Vector3){-1.0f, 0.0f, -1.0f},
+	   (Vector3){2.0f, 1.0f, 2.0f}
+	};
+
 	state.entity_count += 1;
+	state.aabbs[1] = coffee_aabb;
+	state.aabbs_y_offset[1] = 0.5f;
 	state.models[1] = coffee;
 	state.positions[1] = coffee_position;
 	state.velocities[1] = 1.0;
 	state.rotation[1] = 0.0;
 	state.scales[1] = (Vector3){0.1f, 0.1f, 0.1f};
 	state.offset[1] = (Vector3){0.0f, 0.4f, 0.0f};
-
-	// Load and add McDonald's bag entity.
-	Vector3 mc_position = {10.0f, 0.0f, 0.0f};
-	Model mc = LoadModel("resources/mcdonalds_bag.glb");
-	Texture2D mc_texture = LoadTexture("resources/mcdonalds_bag.png");
-	printf("CHANGING MODEL MATERIALS. \n");
-	mc.materials[1].maps[MATERIAL_MAP_DIFFUSE].texture = mc_texture;
-	assert(IsModelReady(mc));
-
-	state.entity_count += 1;
-	state.models[2] = mc;
-	state.positions[2] = mc_position;
-	state.velocities[2] = 1.0;
-	state.rotation[2] = 0.0;
-	state.scales[2] = (Vector3){1.0f, 1.0f, 1.0f};
-	state.offset[2] = (Vector3){0.0f, 1.0f, 0.0f};
 }
 
 static inline void init() {
@@ -230,7 +223,7 @@ void print_aabb(AABB aabb) {
     printf("Bounding Box MAX: (%.2f, %.2f, %.2f)\n", aabb.max.x, aabb.max.y, aabb.max.z);
 }
 
-void draw_bounding_box(Vector3 position, AABB aabb, float scale, Vector3 offset) {
+void draw_bounding_box(Vector3 position, AABB aabb, float aabb_y_offset, float scale, Vector3 offset) {
     print_aabb(aabb);
 
     float length = (aabb.min.x + aabb.max.x);
@@ -239,7 +232,7 @@ void draw_bounding_box(Vector3 position, AABB aabb, float scale, Vector3 offset)
 
     Vector3 new_pos = {
         position.x,
-        position.y + 2.0f,
+        position.y + aabb_y_offset,
         position.z
     };
 
@@ -259,7 +252,7 @@ static void draw() {
         DrawModelEx(
             state.models[i], // Model
             AddVector3(state.positions[i], state.offset[i]), // Position
-            (Vector3){ 0.0f, 1.0f, 0.0f }, // Rotation axis
+            (Vector3){ 0.0f, 1.0f, 0.0f }, // Rotation axis (Y-axis)
             state.rotation[i], // Rotation angle
             state.scales[i], // Scale
             WHITE
@@ -267,7 +260,7 @@ static void draw() {
     }
 
     for (int i = 0; i < state.entity_count; i++) {
-        draw_bounding_box(state.positions[i], state.aabbs[i], state.scales[i].x, state.offset[i]);
+        draw_bounding_box(state.positions[i], state.aabbs[i], state.aabbs_y_offset[i], state.scales[i].x, state.offset[i]);
     }
 
     DrawPoint3D(state.positions[0], BLUE);
