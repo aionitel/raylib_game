@@ -19,27 +19,26 @@ typedef struct {
     Vector3 max;
 } AABB;
 
-bool aabb_is_collision(AABB a, AABB b, Vector3 posA, Vector3 posB) {
-    // Apply the positions to the AABBs' min and max points to get world coordinates
-    Vector3 aMinWorld = (Vector3){ a.min.x + posA.x, a.min.y + posA.y, a.min.z + posA.z };
-    Vector3 aMaxWorld = (Vector3){ a.max.x + posA.x, a.max.y + posA.y, a.max.z + posA.z };
-
-    Vector3 bMinWorld = (Vector3){ b.min.x + posB.x, b.min.y + posB.y, b.min.z + posB.z };
-    Vector3 bMaxWorld = (Vector3){ b.max.x + posB.x, b.max.y + posB.y, b.max.z + posB.z };
-
-    // Check for separation on the X, Y, and Z axes
-    if (aMaxWorld.x < bMinWorld.x || aMinWorld.x > bMaxWorld.x) return false;  // Separated on X-axis
-    if (aMaxWorld.y < bMinWorld.y || aMinWorld.y > bMaxWorld.y) return false;  // Separated on Y-axis
-    if (aMaxWorld.z < bMinWorld.z || aMinWorld.z > bMaxWorld.z) return false;  // Separated on Z-axis
-
-    // If no separation on any axis, the AABBs are colliding
-    return true;
+void print_position(Vector3 position) {
+    printf("INFO: Position X: %f\n", position.x);
+    printf("INFO: Position Y: %f\n", position.y);
+    printf("INFO: Position Z: %f\n", position.z);
 }
 
 void print_aabb(AABB aabb) {
     // Print the min and max corners of the bounding box
     printf("Bounding Box MIN: (%.2f, %.2f, %.2f)\n", aabb.min.x, aabb.min.y, aabb.min.z);
     printf("Bounding Box MAX: (%.2f, %.2f, %.2f)\n", aabb.max.x, aabb.max.y, aabb.max.z);
+}
+
+bool aabb_is_collision(AABB a, AABB b, Vector3 pos_a, Vector3 pos_b) {
+    print_position(pos_a);
+    print_aabb(a);
+
+    print_position(pos_b);
+    print_aabb(b);
+
+    return false;
 }
 
 typedef struct {
@@ -171,7 +170,7 @@ static inline void init() {
 	init_entities();
 }
 
-unsigned int current_frame = 0;
+int current_frame = 0;
 
 void update_player_animation(Model model, ModelAnimation *animations) {
    	// Load model animations.
@@ -225,9 +224,7 @@ static void update() {
     update_player_animation(state.models[0], state.animations[0]);
     UpdateCamera(&state.camera, CAMERA_FREE);
 
-    if (aabb_is_collision(state.aabbs[0], state.aabbs[1], state.positions[0], state.positions[1])) {
-        printf("COLLISION DETECTED \n");
-    }
+    aabb_is_collision(state.aabbs[0], state.aabbs[1], state.positions[0], state.positions[1]);
 }
 
 // Custom function to add two Vector3 vectors
