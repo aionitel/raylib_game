@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <raylib.h>
 
+
 #if defined(PLATFORM_DESKTOP)
     #define GLSL_VERSION            330
 #else   // PLATFORM_ANDROID, PLATFORM_WEB
