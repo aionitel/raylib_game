@@ -3,7 +3,6 @@
 #include <assert.h>
 #include <raylib.h>
 
-
 #if defined(PLATFORM_DESKTOP)
     #define GLSL_VERSION            330
 #else   // PLATFORM_ANDROID, PLATFORM_WEB
@@ -33,11 +32,7 @@ void print_aabb(AABB aabb) {
 }
 
 bool aabb_is_collision(AABB a, AABB b, Vector3 pos_a, Vector3 pos_b) {
-    print_position(pos_a);
-    print_aabb(a);
-
-    print_position(pos_b);
-    print_aabb(b);
+    if (pos_a.x + (a.min.x / 2) <= pos_b.x + (a.max.x / 2)) return true;
 
     return false;
 }
@@ -99,8 +94,8 @@ static inline void init_entities() {
     // INIT player manually.
     // Load player model and texture.
     Vector3 player_position = {0.0f, 0.0f, 0.0f};
-   	Model billy = LoadModel("resources/billy.glb");
-	Texture2D texture = LoadTexture("resources/Billy_baseColor.png");
+   	Model billy = LoadModel("res/billy.glb");
+	Texture2D texture = LoadTexture("res/Billy_baseColor.png");
 	printf("CHANGING MODEL MATERIALS. \n");
 	billy.materials[1].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
 	assert(IsModelReady(billy));
@@ -113,7 +108,7 @@ static inline void init_entities() {
 
 	// Load player model animations.
 	int anim_count = 0;
-	ModelAnimation *animations = LoadModelAnimations("resources/billy.glb", &anim_count);
+	ModelAnimation *animations = LoadModelAnimations("res/billy.glb", &anim_count);
 
 	// Set entity system index. (Player will always be 0)
 	state.entity_count += 1;
@@ -130,7 +125,7 @@ static inline void init_entities() {
 
 	// Load and add coffee entity.
 	Vector3 coffee_position = {5.0f, 0.0f, 0.0f};
-	Model coffee = LoadModel("resources/coffee.glb");
+	Model coffee = LoadModel("res/coffee.glb");
 	assert(IsModelReady(coffee));
 
 	AABB coffee_aabb = {
@@ -225,7 +220,7 @@ static void update() {
     update_player_animation(state.models[0], state.animations[0]);
     UpdateCamera(&state.camera, CAMERA_FREE);
 
-    aabb_is_collision(state.aabbs[0], state.aabbs[1], state.positions[0], state.positions[1]);
+    if (aabb_is_collision(state.aabbs[0], state.aabbs[1], state.positions[0], state.positions[1])) printf("COLLISION\n");
 }
 
 // Custom function to add two Vector3 vectors
@@ -238,18 +233,12 @@ Vector3 AddVector3(Vector3 v1, Vector3 v2) {
 }
 
 void draw_bounding_box(Vector3 position, AABB aabb, float aabb_y_offset, float scale, Vector3 offset) {
-    float length = (aabb.min.x + aabb.max.x);
-    float height = (aabb.min.y + aabb.max.y);
-    float width = (aabb.min.z + aabb.max.z);
-
-    Vector3 new_pos = {
-        position.x,
-        position.y + aabb_y_offset,
-        position.z
-    };
+    float length = aabb.min.x + aabb.max.x;
+    float height = aabb.min.y + aabb.max.y;
+    float width = aabb.min.z + aabb.max.z;
 
     DrawCubeWires(
-        new_pos,
+        (Vector3){position.x, position.y + aabb_y_offset, position.z},
         width,
         height,
         length,
@@ -274,8 +263,6 @@ static void draw() {
     for (int i = 0; i < state.entity_count; i++) {
         draw_bounding_box(state.positions[i], state.aabbs[i], state.aabbs_y_offset[i], state.scales[i].x, state.offset[i]);
     }
-
-    DrawPoint3D(state.positions[0], BLUE);
 }
 
 int main() {
