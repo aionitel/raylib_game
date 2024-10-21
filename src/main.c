@@ -33,7 +33,7 @@ void print_aabb(AABB aabb) {
 
 bool aabb_is_collision(AABB a, AABB b, Vector3 pos_a, Vector3 pos_b) {
     if (pos_a.x + (a.min.x / 2) <= pos_b.x + (a.max.x / 2)) return true;
-
+    
     return false;
 }
 
@@ -67,19 +67,19 @@ static void move_player(Vector3 *position, float *rotation, int *animation_index
 
     // Update position.
     if (IsKeyDown(KEY_I)) {
-        position->x += GetFrameTime() * SPEED;
-        *animation_index = 0;
-    }
-    if (IsKeyDown(KEY_K)) {
-        position->x -= GetFrameTime() * SPEED;
-        *animation_index = 0;
-    }
-    if (IsKeyDown(KEY_J)) {
         position->z -= GetFrameTime() * SPEED;
         *animation_index = 0;
     }
-    if (IsKeyDown(KEY_L)) {
+    if (IsKeyDown(KEY_K)) {
         position->z += GetFrameTime() * SPEED;
+        *animation_index = 0;
+    }
+    if (IsKeyDown(KEY_J)) {
+        position->x -= GetFrameTime() * SPEED;
+        *animation_index = 0;
+    }
+    if (IsKeyDown(KEY_L)) {
+        position->x += GetFrameTime() * SPEED;
         *animation_index = 0;
     }
 }
@@ -153,7 +153,7 @@ static inline void init() {
 
 	// Define the camera to look into our 3d world
     Camera camera = { 0 };
-    camera.position = (Vector3){ -10.0f, 10.0f, 0.0f }; // Camera position
+    camera.position = (Vector3){ 0.0f, 10.0f, 10.0f }; // Camera position
     camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
     camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
     camera.fovy = 45.0f;                                // Camera field-of-view Y
